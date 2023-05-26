@@ -1,0 +1,40 @@
+{% load widget_tweaks %}
+
+<div class="modal-header">
+    <h3 class="modal-title text-primary">Parking Record Details</h3>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="modal-body">
+
+    <div class="">
+        <strong> Parking Slot </strong>
+        {{ object.parking_slot }}  
+    </div>
+    <div class="">
+        <strong> Car Number: </strong>
+        {{ object.car.license_plate }}
+    </div>
+    <div class="">
+        <strong> Entry time: </strong>
+        {{ object.entry_time }}
+    </div>
+    <div class="">
+        <strong> Exit time:  </strong>
+        {{ object.exit_time }}
+    </div>
+    <div class="">
+        <strong> Total cost:  </strong>
+        {{ object.total_cost }}
+    </div>
+    <div class="">
+        <strong> Is paid: </strong>
+        {{ object.is_paid }}
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+</div>

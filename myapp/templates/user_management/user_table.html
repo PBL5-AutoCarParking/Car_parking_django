@@ -1,0 +1,144 @@
+{% block content %}
+<div id="content-wrapper">
+  <div class="container-fluid">
+
+    <!-- <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="#">List Of Cars</a>
+        </li>
+    </ol> -->
+    <h1 class="text-center">User List</h1>
+    <div class="card mb-3">
+      <div class="card-header">
+        <div class="row">
+          <div class="col-sm-9">
+            <form method="GET" action="{% url 'user_list' %}">
+              <div class="form-inline d-flex align-items-center">
+                <select class="form-control mr-2" id="OrderFormControlSelect" name="order-list" value="{{orderType}}">
+                  <option value="1" {% if orderType == '1' %}selected{% endif %}>Sort by id </option>
+                  <option value="2" {% if orderType == '2' %}selected{% endif %}>Sort by username
+                  </option>
+                  <option value="3" {% if orderType == '3' %}selected{% endif %}>Sort by date join
+                  </option>
+                  <option value="4" {% if orderType == '4' %}selected{% endif %}>Filter active user
+                  </option>
+                  <option value="5" {% if orderType == '4' %}selected{% endif %}>Filter inactive user
+                  </option>
+                </select>
+
+                <button type="submit" class="btn btn-sm btn-secondary mr-2" id="sortButton">
+                  Sort
+                </button>
+                <input type="text" class="form-control" name="search" placeholder="Search"
+                       value="{{ search_query }}">
+                <button type="submit" class="btn btn-sm btn-primary ml-2" id="searchButton">
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+      <div class="card-header">
+        <i class="fas fa-table"></i>
+        Information
+      </div>
+      <!--  -->
+      <div class="card-body">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+          {{ message }}
+        </div>
+        {% endfor %}
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th> No </th>
+            <th> Username </th>
+            <th> Date Join</th>
+            <th> Active status </th>
+            <th> Action </th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.date_joined }}</td>
+            {% if u.is_active %}
+            <td><span class="badge badge-success">Đã active</span></td>
+            {% else %}
+            <td><span class="badge badge-danger"> Chưa active</span></td>
+            {% endif  %}
+            <td>
+              <button type="button" class="read-user btn btn-sm btn-primary"
+                      data-form-url="{% url 'user_view' u.pk %}">
+              <span class=" fa fa-eye">View</span>
+              </button>
+
+              {% if not u.is_active %}
+              <button type="button" class="update-user btn btn-sm btn-warning"
+                      data-form-url="{% url 'active_user' u.pk %}">
+                <span class="fa fa-pencil"> Active</span>
+              </button>
+              {% else %}
+              <button type="button" class="update-user btn btn-sm btn-warning"
+                      data-form-url="{% url 'inactive_user' u.pk %}">
+                <span class="fa fa-pencil"> Inactive </span>
+              </button>
+              {% endif %}
+              <button type="button" class="delete-user btn btn-sm btn-danger"
+                      data-form-url="{% url 'delete_user' u.pk %}">
+                <span class="fa fa-trash"> Delete</span>
+              </button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4">No user found.</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+
+        {% if is_paginated %}
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&order-list={{ orderType }}&search={{ search_query }}">&laquo; Previous</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">&laquo; Previous</span>
+          </li>
+          {% endif %}
+          {% for i in paginator.page_range %}
+          {% if page_obj.number == i %}
+          <li class="page-item active">
+            <span class="page-link">{{ i }} <span class="sr-only">(current)</span></span>
+          </li>
+          {% else %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ i }}&order-list={{ orderType }}&search={{ search_query }}">{{ i }}</a>
+          </li>
+          {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&order-list={{ orderType }}&search={{ search_query }}">Next &raquo;</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link">Next &raquo;</span>
+          </li>
+          {% endif %}
+        </ul>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

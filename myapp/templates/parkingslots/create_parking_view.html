@@ -1,0 +1,32 @@
+<!-- posts/templates/posts/create-post.html -->
+{% extends "base.html" %}
+{% block title %}
+{% endblock title %}
+{% block content %}
+  <h4><small>Create Register Parking</small></h4>
+  <hr>
+  <div class="card-body">
+    <div class="table-responsive">
+      <form action="{% url 'posts:create-post' %}" method="POST">
+        {% csrf_token %}
+        <div class="form-group">                    
+          <label for="comment">Car name<span style="color: red">*</span> :</label>
+          <input type="text" class="form-control" rows="5" name="name" required>
+        </div>
+        <div class="form-group">                    
+            <label for="comment">Car Number<span style="color: red">*</span> :</label>
+            <input type="text" class="form-control" rows="5" name="car_number" required>
+          </div>
+        <div class="form-group">
+          <label for="comment">Customer name<span style="color: red">*</span> :</label>
+          <textarea class="form-control" rows="5" name="content" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="comment">card Number<span style="color: red">*</span> :</label>
+            <textarea class="form-control" rows="5" name="content" required></textarea>
+          </div>
+        <button class="btn btn-secondary" type="submit">Create Register</button>
+      </form>
+    </div>
+  </div>
+{% endblock content %}

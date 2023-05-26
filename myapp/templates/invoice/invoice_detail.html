@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+    <div class="col-12 mb-3">
+        {% include 'invoice/invoice_detail_content.html' %}
+        <div class="row">
+            <div class="col-md-6">
+                {% if request.user.is_admin %}
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">Quay lại</a>
+                {% else %}
+                <a href="{% url 'customer_invoice_list' %}" class="btn btn-secondary">Quay lại</a>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <a href="{% url 'invoice_print' invoice_id=invoice.pk %}" class="btn btn-primary">In hóa đơn</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

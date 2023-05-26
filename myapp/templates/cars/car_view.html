@@ -1,0 +1,44 @@
+{% load widget_tweaks %}
+
+<div class="modal-header">
+    <h3 class="modal-title text-primary">Car Details</h3>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="modal-body">
+    <div id="content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4">
+                    {% if car.image %}
+                    <img src="{{ car.image.url }}" alt="car_image" class="img-fluid">
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <div class="">
+                        <strong> License Plate Number: </strong>
+                        {{ car.license_plate }}
+                    </div>
+                    <div class="">
+                        <strong> Car owner: </strong>
+                        {{ car.owner.last_name }}
+                    </div>
+                    <div class="">
+                        <strong> Car Model: </strong>
+                        {{ car.car_model }}
+                    </div>
+                    <div class="">
+                        <strong> Car Color: </strong>
+                        {{ car.car_color}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+</div>

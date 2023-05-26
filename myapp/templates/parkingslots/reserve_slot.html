@@ -1,0 +1,38 @@
+{% load widget_tweaks %}
+
+{% block content %}
+<!-- Modal -->
+<div class="modal-header">
+    <h5 class="modal-title" id="reservationModalLabel">Đặt chỗ</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <p>Đặt chỗ tại bãi số
+        <strong>{{ slot.slot_number }} </strong>?</p>
+    <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="slot_number" value="{{slot.slot_number}}">
+        <div class="form-group">
+            <label for="car">Chọn xe của bạn:</label>
+            <select class="form-control" id="car" name="car">
+                {% for car in cars %}
+                <option value="{{ car.id }}">{{ car.license_plate }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <!--                    <div class="form-group">-->
+        <!--                        <label for="start_time">Thời gian bắt đầu:</label>-->
+        <!--                        <input type="datetime-local" class="form-control" id="start_time" name="start_time">-->
+        <!--                    </div>-->
+        <!--                    <div class="form-group">-->
+        <!--                        <label for="end_time">Thời gian kết thúc:</label>-->
+        <!--                        <input type="datetime-local" class="form-control" id="end_time" name="end_time">-->
+        <!--                    </div>-->
+        <button type="submit" class="btn btn-primary">Đặt chỗ</button>
+    </form>
+</div>
+
+
+{% endblock %}

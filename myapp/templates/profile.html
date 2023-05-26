@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<hr>
+<div class="container">
+        <form enctype="multipart/form-data" action="{% url 'save_profile' %}" method="post" id="registrationForm">
+            {% csrf_token %}
+            <div class="col-lg-8">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <div class="row">
+                            <div class="col-sm-10"><h1>PROFILE</h1></div>
+                            <div class="col-sm-2">
+                                <a href="/users" class="float-right">
+                                    <img title="profile image" class="img-circle img-fluid"
+                                         src="http://www.gravatar.com/avatar/28fd20ccec6865e2d5f0e1f4446eb7bf?s=100">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <img src="{{ user.avatar.url }}"
+                                         class="avatar img-circle img-thumbnail"
+                                         alt="avatar">
+                                    <h6>Upload a different photo...</h6>
+                                    <div class="custom-file">
+                                        <input name="avatar" type="file" class="custom-file-input" id="avatarInput">
+                                        <label class="custom-file-label text-left" for="avatarInput">Choose file</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-toggle="tab" href="#home">Information</a>
+                                    </li>
+                                </ul>
+                                {% if user.is_customer %}
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="home">
+                                        <div class="form-group">
+                                            <label for="first_name">First name</label>
+                                            <input type="text" class="form-control" name="first_name" id="first_name"
+                                                   title="Enter your first name if any."
+                                                   value="{{customer.first_name}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="last_name">Last name</label>
+                                            <input type="text" class="form-control" name="last_name" id="last_name"
+                                                   title="Enter your last name if any." value="{{customer.last_name}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Tên đăng nhập</label>
+                                            <input type="text" class="form-control" name="username" id="username"
+                                                   placeholder="username" title="Enter your username."
+                                                   value="{{user.username}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="phone">Phone</label>
+                                            <input type="text" class="form-control" name="phone_number" id="phone"
+                                                   value="{{customer.phone_number}}"
+                                                   title="Enter your phone number if any.">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="card_number">Card Number</label>
+                                            <input type="text" class="form-control" name="card_number" id="card_number"
+                                                   title="Enter your mobile number if any."
+                                                   value="{{customer.card_number}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="email" class="form-control" name="email" id="email"
+                                                   placeholder="you@email.com" title="Enter your email."
+                                                   value="{{ customer.user.email}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="location"><h4>Location</h4></label>
+                                            <input type="text" class="form-control" id="location" name="location"
+                                                   title="enter a location" value="{{customer.location}}"/>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-xs-12">
+                                                <br>
+                                                <button class="btn btn-lg btn-success" type="submit"><i
+                                                        class="glyphicon glyphicon-ok-sign"></i> Save
+                                                </button>
+                                                <button class="btn btn-lg" type="reset"><i
+                                                        class="glyphicon glyphicon-repeat"></i>
+                                                    Reset
+                                                </button>
+                                                <a class="btn btn-lg btn-primary" href="{% url 'password_change' %}">Change Password</a>
+                                            </div>
+                                        </div>
+                                    </div><!--/tab-pane-->
+                                </div>
+                                {% else %}
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="home">
+                                        <div class="form-group">
+                                            <label for="first_name">First name</label>
+                                            <input type="text" class="form-control" name="first_name" id="first_name"
+                                                   title="Enter your first name if any."
+                                                   value="{{user.first_name}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="last_name">Last name</label>
+                                            <input type="text" class="form-control" name="last_name" id="last_name"
+                                                   title="Enter your last name if any." value="{{user.last_name}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Username</label>
+                                            <input type="text" class="form-control" name="username" id="username"
+                                                   placeholder="username" title="Enter your username."
+                                                   value="{{user.username}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input type="email" class="form-control" name="email" id="email"
+                                                   placeholder="you@email.com" title="Enter your email."
+                                                   value="{{user.email}}">
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-xs-12">
+                                                <br>
+                                                <button class="btn btn-lg btn-success" type="submit"><i
+                                                        class="glyphicon glyphicon-ok-sign"></i> Save
+                                                </button>
+                                                <button class="btn btn-lg" type="reset"><i
+                                                        class="glyphicon glyphicon-repeat"></i>
+                                                    Reset
+                                                </button>
+                                                <a class="btn btn-lg btn-primary" href="{% url 'password_change' %}">Change Password</a>
+                                            </div>
+                                        </div>
+                                    </div><!--/tab-pane-->
+                                </div>
+                                {% endif %}
+
+                            </div><!--/row-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+</div>
+<!--Modal message-->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="myModalLabel">Profile Update Status</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrascripts %}
+{% if messages %}
+{% for message in messages %}
+<div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="5000">
+    <div class="toast-header">
+        <strong class="mr-auto">{{ message.tags }}</strong>
+        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="toast-body">
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<script>
+        $('.toast').toast('show');
+</script>
+
+{% endif %}
+
+
+
+<script>
+    $(document).ready(function() {
+        var readURL = function(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('.avatar').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $(".custom-file-input").on('change', function(){
+            readURL(this);
+        });
+
+        {% if messages %}
+          {% for message in messages %}
+            {% if message.tags == 'success' %}
+              $('#myModal').modal('show');
+              $('#modal-message').text('{{ message }}');
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+    });
+
+
+</script>
+{% endblock extrascripts %}

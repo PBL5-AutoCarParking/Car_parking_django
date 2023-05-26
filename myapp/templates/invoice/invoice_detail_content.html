@@ -1,0 +1,76 @@
+{% block content %}
+
+<div class="row">
+
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Hóa đơn</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">Ngày {{ invoice.invoice_date }}</h6>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="card-text">Số #{{ invoice.invoice_number }}</p>
+                            <p class="card-text">Tên khách hàng: {{ invoice.parking_record.car.owner.first_name }}
+                                {{ invoice.parking_record.car.owner.last_name }}</p>
+                            <p class="card-text">Địa chỉ: ...</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="card-text">Vị trí bãi: {{ invoice.parking_record.parking_slot.slot_number}}</p>
+                            <p class="card-text">Thời gian vào : {{ invoice.parking_record.entry_time }}</p>
+                            <p class="card-text">Thời gian ra : {{ invoice.parking_record.exit_time }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Mô tả</th>
+                            <th>Giá</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Phí đỗ xe</td>
+                            <td>{{ invoice.parking_fee}}</td>
+                        </tr>
+                        <tr>
+                            <td>Phụ phí</td>
+                            <td>{{ invoice.extra_fee }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <hr>
+                    {% if invoice.payment_status == "paid" %}
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <p class="card-text text-right"><strong>Đã thanh toán</strong></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <p class="card-text text-right"><strong>Total: {{ invoice.total_fee }}</strong></p>
+                        </div>
+                    </div>
+                    {% elif invoice.payment_status == "unpaid" %}
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <p class="card-text text-right"><strong>Chưa thanh toán</strong></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <p class="card-text text-right"><strong>Total: {{ invoice.total_fee }}</strong></p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

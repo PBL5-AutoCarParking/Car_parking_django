@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<body>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Bãi đỗ xe</h1>
+    {% for parking_slot in parking_slots %}
+    {% if forloop.counter0|divisibleby:3 %}
+    <div class="row justify-content-around align-items-stretch mt-3">
+        {% endif %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card" data-slot-pk="{{ parking_slot.pk }}">
+                <div class="card-header">
+                    Vị trí {{ parking_slot.slot_number }}
+                </div>
+                <div class="card-body">
+                    {% if not parking_slot.is_available %}
+                    <div class="car-background">
+                    <p><span class="badge badge-success">Đã đặt</span></p>
+                    </div>
+                    {% if user.is_admin %}
+                    <div>
+                        <!-- Thêm form thanh toán trực tiếp -->
+                        <button type="button" data-slot-pk="{{ parking_slot.pk }}" class="btn btn-sm btn-primary" id="openConfirmationDirectPayModalBtn">
+                            <span class="fa fa-check"> Thanh toán trực tiếp </span>
+                        </button>
+                    </div>
+                    <br>
+                    <div>
+                        <button type="button" data-slot-pk="{{ parking_slot.pk }}" class="btn btn-sm btn-primary" id="openConfirmationOnlinePayModalBtn">
+                            <span class="fa fa-check"> Thanh toán sau </span>
+                        </button>
+                        <!-- Thêm form thanh toán sau -->
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <p>Parking type: {{ parking_slot.get_parking_type_display }}</p>
+                    <p>Cost per day: {{ parking_slot.cost_per_hour }}</p>
+                    <p><span class="badge badge-danger">Empty</span></p>
+                        {% if cars %}
+                    <button type="button" class="bs-modal reserve-slot btn btn-sm btn-primary"
+                            data-form-url="{% url 'reserve_slot' %}"
+                            data-slot-number="{{ parking_slot.slot_number }}">
+                        <span class="fa fa-plus" > Đặt chỗ </span>
+                    </button>
+                        {% else %}
+                            {% if request.user.is_customer %}
+                     <p class="text-danger">Bạn chưa đăng ký xe nào</p>
+                         <button type="button" class="btn btn-sm btn-primary"
+                            data-slot-number="{{ parking_slot.slot_number }}">
+                             <a href="{% url 'user_car_list' %}" style="color: white;"><span class="fa fa-plus">Vào trang đăng ký</span></a>
+                        </button>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if forloop.counter0|add:1|divisibleby:3 or forloop.last %}
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="text-center">
+        <p class="text-muted">Không có xe nào trong bãi đỗ xe.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="reservationModal" tabindex="-1" role="dialog" aria-labelledby="reservationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservationModalLabel">Đặt chỗ</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Đặt chỗ tại bãi số
+                    <strong> {{ parking_slot.slot_number }}</strong></p>
+                <form method="post" action="{% url 'reserve_slot' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="slot_number" value="{{ parking_slot.slot_number }}">
+                    <div class="form-group">
+                        <label for="car">Chọn xe của bạn:</label>
+                        <select class="form-control" id="car" name="car">
+                            {% for car in cars %}
+                            <option value="{{ car.id }}">{{ car.license_plate }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!--                    <div class="form-group">-->
+                    <!--                        <label for="start_time">Thời gian bắt đầu:</label>-->
+                    <!--                        <input type="datetime-local" class="form-control" id="start_time" name="start_time">-->
+                    <!--                    </div>-->
+                    <!--                    <div class="form-group">-->
+                    <!--                        <label for="end_time">Thời gian kết thúc:</label>-->
+                    <!--                        <input type="datetime-local" class="form-control" id="end_time" name="end_time">-->
+                    <!--                    </div>-->
+                    <button type="submit" class="btn btn-primary">Đặt chỗ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm modal xác nhận -->
+<div class="modal" id="confirmationModal1" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'direct_payment_view' %}">
+                {% csrf_token %}
+                <input type="hidden" name="parking_slot_id" value="{{ parking_slot.id }}">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Xác nhận thanh toán {{ parking_slot.id }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn thanh toán trực tiếp?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="confirmDirectPaymentBtn">Xác nhận</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="confirmationModal2" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel2"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{% url 'online_payment_view' %}">
+                {% csrf_token %}
+                <input type="hidden" name="parking_slot_id" value="{{ parking_slot.id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel2">Xác nhận thanh toán</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn thanh toán online sau?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="confirmOnlinePaymentBtn">Xác nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="fixed-top m-3">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li {% if message.tags %} class="{{ message.tags }} alert" {% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+</body>
+
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+
+  $(document).ready(function () {
+
+
+    $(".reserve-slot").each(function () {
+        $(this).modalForm({ formURL: $(this).data("form-url") });
+    });
+     $(".reserve-slot").click(function () {
+        var formURL = $(this).data("form-url");
+        $("#reservationModal").modal("show");
+        var slotNumber = $(this).data("slot-number"); // Lấy số slot từ button đặt chỗ
+        $("#reservationModal strong").text(slotNumber); // Đặt giá trị số slot vào modal
+        $("#reservationModal input[name=slot_number]").val(slotNumber); // Đặt giá trị số slot vào input của form
+    });
+
+    $(".exit-btn").click(function () {
+        var parkingSlotPk = $(this).data("pk");
+        $.ajax({
+            url: "/get_customer_info/",
+            type: "POST",
+            data: { pk: parkingSlotPk },
+            success: function (response) {
+
+                var customer = response.customer;
+
+                $("#customerName").text(customer.name);
+                $("#customerEmail").text(customer.email);
+                $("#customerPhone").text(customer.phone);
+
+                $("#exitModal").modal("show");
+            },
+            error: function (error) {
+            }
+        });
+    });
+
+     $("#openConfirmationDirectPayModalBtn").click(function () {
+        var slotPk = $(this).data("slot-pk");
+        $("#confirmationModal1 input[name=parking_slot_id]").val(slotPk);
+        $('#confirmationModal1').modal('show');
+     });
+     $("#confirmDirectPaymentBtn").click(function () {
+       $('#confirmationModal1').modal('hide');
+     });
+
+      $("#openConfirmationOnlinePayModalBtn").click(function () {
+        var slotPk = $(this).data("slot-pk");
+        $("#confirmationModal2 input[name=parking_slot_id]").val(slotPk);
+        $('#confirmationModal2').modal('show');
+     });
+     $("#confirmOnlinePaymentBtn").click(function () {
+       $('#confirmationModal2').modal('hide');
+     });
+
+});
+
+</script>
+{% endblock %}
+
+{% endblock %}
+
+

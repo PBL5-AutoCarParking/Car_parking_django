@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div id="content-wrapper">
+    <div class="container-fluid">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="">My Cars</a>
+            </li>
+        </ol>
+        <div class="card mb-3">
+            <div class="card-header">
+
+                <div class="row">
+                    <div class="col-sm-9">
+                        <form method="GET" action="{% url 'user_car_list' %}">
+                            <div class="form-inline d-flex align-items-center">
+                                <button id="create-user-car" type="button" class="bs-modal btn btn-sm btn-primary"
+                                        data-form-url="{% url 'create_user_car' %}">
+                                    <span class="fa fa-plus"> Register car</span>
+                                </button>
+
+                                <select class="form-control mr-2" id="OrderFormControlSelect" name="order-list" value="{{orderType}}">
+                                    <option value="1" {% if orderType == '1' %}selected{% endif %}>Sort by id </option>
+                                    <option value="2" {% if orderType == '2' %}selected{% endif %}>Sort by car name
+                                    </option>
+                                    <option value="3" {% if orderType == '3' %}selected{% endif %}>Sort by date register
+                                    </option>
+                                </select>
+
+                                <button type="submit" class="btn btn-sm btn-secondary mr-2" id="sortButton">
+                                    Sort
+                                </button>
+                                <input type="text" class="form-control" name="search" placeholder="Search"
+                                       value="{{ search_query }}">
+                                <button type="submit" class="btn btn-sm btn-primary ml-2" id="searchButton">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-header">
+                <i class="fas fa-table"></i>
+                Information
+            </div>
+            <div class="card-body">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Biển số xe</th>
+                            <th>Kiểu xe</th>
+                            <th>Màu xe</th>
+                            <th>Ngày đăng ký</th>
+                            <th colspan="2">Trạng thái</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        {% if cars %}
+                        {% for car in cars %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ car.license_plate }}</td>
+                            <td>{{ car.car_model }}</td>
+                            <td>{{ car.car_color }}</td>
+                            <td>{{ car.reg_date }}</td>
+
+                            {% if car.is_active %}
+                            <td><span class="badge badge-success">Đã phê duyệt</span></td>
+                            {% else %}
+                            <td><span class="badge badge-danger">Chờ phê duyệt</span></td>
+                            {% endif %}
+
+                            {% if car.is_parking %}
+                            <td><span class="badge badge-success">Xe đã đậu</span></td>
+                            {% else %}
+                            <td><span class="badge badge-danger">Xe chưa đậu</span></td>
+                            {% endif %}
+                            <td>
+                                <button type="button" class="bs-modal read-user-car btn btn-sm btn-primary"
+                                        data-form-url="{% url 'user_car_detail' car.pk %}">
+                                    <span class="fa fa-eye">View</span>
+                                </button>
+
+                                <button type="button" class="update-user-car btn btn-sm btn-warning"
+                                        data-form-url="{% url 'update_user_car' car.pk %}">
+                                    <span class="fa fa-pencil">Edit</span>
+                                </button>
+
+                                <button type="button" class="bs-modal delete-user-car btn btn-sm btn-danger"
+                                        data-form-url="{% url 'delete_user_car' car.pk %}">
+                                    <span class="fa fa-trash"> Delete</span>
+                                </button>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                        </tbody>
+                    </table>
+                    {% if is_paginated %}
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                        <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+                        {% else %}
+                        <li class="disabled"><span>&laquo;</span></li>
+                        {% endif %}
+                        {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                        {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                        <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+                        {% else %}
+                        <li class="disabled"><span>&raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="create-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+
+{% if error_message %}
+<div class="alert alert-danger" role="alert">
+    {{ error_message }}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extrascripts %}
+<script type="text/javascript">
+$(function () {
+    var asyncSuccessMessageUpdate = [
+        "<div ",
+        "style='position:fixed;top:0;z-index:10000;width:100%;border-radius:0;' ",
+        "class='alert alert-icon alert-success alert-dismissible fade show mb-0' role='alert'>",
+        "Success: Data was updated.",
+        "<button type='button' class='close' data-dismiss='alert' aria-label='Close'>",
+        "<span aria-hidden='true'>&times;</span>",
+        "</button>",
+        "</div>",
+        "<script>",
+        "$('.alert').fadeTo(2000, 500).slideUp(500, function () {$('.alert').slideUp(500).remove();});",
+        "<\/script>"
+    ].join("");
+
+
+    function updateCarModalForm() {
+        $(".update-user").each(function () {
+            $(this).modalForm({
+                formURL: $(this).data("form-url"),
+                asyncUpdate: true,
+                asyncSettings: {
+                    closeOnSubmit: false,
+                    successMessage: asyncSuccessMessageUpdate,
+                    dataUrl: "books/",
+                    dataElementId: "#books-table",
+                    dataKey: "table",
+                    addModalFormFunction: updateBookModalForm
+                }
+            });
+        });
+    }
+    updateCarModalForm();
+});
+    $(document).ready(function() {
+    $(".read-user-car").each(function () {
+        $(this).modalForm({formURL: $(this).data("form-url")});
+    });
+
+    $(".delete-user-car").each(function () {
+        $(this).modalForm({formURL: $(this).data("form-url"), isDeleteForm: true});
+    });
+    $("#create-user-car").modalForm({
+        formURL: "{% url 'create_user_car' %}"
+    });
+     $(".update-user-car").each(function () {
+        $(this).modalForm({formURL: $(this).data("form-url")});
+    });
+});
+</script>
+{% endblock %}
+
+

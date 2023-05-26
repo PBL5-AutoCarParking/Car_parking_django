@@ -1,0 +1,112 @@
+{% load static %}
+<title>PIMS</title>
+<video loop muted autoplay playsinline class="video">
+    <source src="{% static 'img/parking.mp4' %}" type="video/mp4"/>
+</video>
+<link href="{% static 'home/login/index.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+.social-platform {
+    font-size: 18px;
+    color: #fff;
+    text-align: center;
+}
+.social-icons a{
+    display: inline-block;
+    width: 35px;
+    height: 35px;
+    background: transparent;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    text-align:center;
+    line-height:35px;
+    margin: 15px 6px 0;
+}
+.social-icons a:hover{
+    background: #fff;
+}
+
+.social-icons a i{
+    color: #fff;
+    font-size: 18px;
+    transition: .3s;
+    margin: 8px;
+}
+
+.social-icons a:hover i{
+    color: rgba(0,0,0,.3);
+}
+
+.social-icons a i.my-google-color {
+  color: #4285F4;
+}
+
+.social-icons a i.my-facebook-color {
+  color: #1877F2;
+}
+
+.social-icons a i.my-twitter-color {
+  color: #1DA1F2;
+}
+
+</style>
+<body>
+
+<h2 class="header">Car
+    Parking Information
+    Management System</h2>
+<section>
+    <div class="form-box">
+        <div class="form-value">
+            <h2>Login Here</h2>
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="inputBox">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="text" name="username" required onkeyup="this.setAttribute('value', this.value);"
+                           value="">
+                    <label>Username</label>
+                </div>
+                <div class="inputBox">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input type="password" name="password" required onkeyup="this.setAttribute('value', this.value);"
+                           value="">
+                    <label>Password</label>
+                </div>
+
+                <div class="forget">
+                    <input type="checkbox" name="remember" id="remember">
+                    <label for="remember">Remember me</label>
+                    <a href="{% url 'password_reset' %}">Forgot password?</a>
+                </div>
+
+                <button class="login_btn" type="submit" name="sign-in" value="Sign In">Login</button>
+                <div class="register">
+                    <p>Don't have a account? <a href="{% url 'signup'%}">Register</a></p>
+                </div>
+                <hr>
+                <div class="social-platform">
+                    <p>Or sign in with</p>
+                    <div class="social-icons">
+                        <a href="{% url 'google_login' %}"><i class="fab fa-google my-google-color"></i></a>
+                        <a href="#"><i class="fab fa-facebook my-facebook-color"></i></a>
+                        <a href="#"><i class="fab fa-twitter my-twitter-color"></i></a>
+                    </div>
+                </div>
+            </form>
+            <br>
+            <div class="form-group">
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+
+                    <div class="alert alert-success" style="color:red;"> {{ message }}</div>
+
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+</body>

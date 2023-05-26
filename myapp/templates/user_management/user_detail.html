@@ -1,0 +1,57 @@
+{% load widget_tweaks %}
+
+<div class="modal-header">
+    <h3 class="modal-title text-primary">User Details</h3>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<div class="modal-body">
+    <div id="content-wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4">
+                    {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}" alt="avatar" class="img-fluid">
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <div class="">
+                        <strong> No: </strong>
+                        {{ user.id }}
+                    </div>
+                    <div class="">
+                        <strong> Fullname </strong>
+                        {{ user.first_name }} {{user.last_name }}
+                    </div>
+                    <div class="">
+                        <strong> Username / Email </strong>
+                        {{ user.email }}
+                    </div>
+                    <div class="">
+                        <strong> Last login </strong>
+                        {{ user.last_login }}
+                    </div>
+                    <div class="">
+                        <strong> Register Date </strong>
+                        {{ user.date_joined }}
+                    </div>
+
+                    <div class="">
+                        <strong> Status: </strong>
+                        {% if user.is_active %}
+                        {{ "Da kich hoat" }}
+                        {% else %}
+                        {{ "Chua kich hoat" }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+</div>

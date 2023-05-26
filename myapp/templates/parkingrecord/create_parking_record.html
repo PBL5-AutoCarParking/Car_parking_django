@@ -1,0 +1,36 @@
+{% load widget_tweaks %}
+
+<!-- Modal -->
+<div class="modal-header">
+  <h5 class="modal-title" id="addParkingRecordModalLabel">Add Parking Record</h5>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<form method="post" action="">
+  {% csrf_token %}
+  <div class="modal-body">
+    <div class="form-group">
+      <label for="car_id">Car:</label>
+      <select class="form-control" id="car_id" name="car_id" required>
+        {% for car in cars %}
+        <option value="{{ car.id }}">{{ car.license_plate }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="parking_slot_id">Parking Slot:</label>
+      <select class="form-control" id="parking_slot_id" name="parking_slot_id" required>
+        {% for parking_slot in parking_slots %}
+        {% if parking_slot.is_available %}
+        <option value="{{ parking_slot.id }}">{{ parking_slot.slot_number }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    <button type="submit" class="btn btn-primary">Add Record</button>
+  </div>
+</form>

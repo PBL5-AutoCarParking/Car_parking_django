@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Invoice</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ invoice.date }}</h6>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="card-text">Invoice #{{ invoice.invoice_number }}</p>
+                            <p class="card-text">Customer name: {{ invoice.parking_record.customer.name }}</p>
+                            <p class="card-text">Customer email: {{ invoice.parking_record.customer.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="card-text">Parking slot ID: {{ invoice.parking_record.parking_slot.id }}</p>
+                            <p class="card-text">Entry time: {{ invoice.parking_record.entry_time }}</p>
+                            <p class="card-text">Exit time: {{ invoice.parking_record.exit_time }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Parking fee</td>
+                            <td>1</td>
+                            <td>{{ invoice.total_cost }}</td>
+                            <td>{{ invoice.total_cost }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <p class="card-text text-right"><strong>Total: {{ invoice.total_cost }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

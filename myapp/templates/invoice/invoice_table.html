@@ -1,0 +1,135 @@
+{% block content %}
+<div id="content-wrapper">
+    <div class="container-fluid">
+
+        <!-- <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="#">List Of Cars</a>
+
+            </li>
+        </ol> -->
+        <h1 class="text-center">Danh sách hóa đơn</h1>
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-9">
+                        <form method="GET" action="{% url 'invoice_list' %}">
+                            <div class="form-inline d-flex align-items-center">
+                                <select class="form-control mr-2" id="OrderFormControlSelect" name="order-list">
+                                    <option value="1" {% if orderType == 1 %}selected{% endif %}>Sort by id </option>
+                                    <option value="2" {% if orderType == 2 %}selected{% endif %}>Sort by Customer name
+                                    </option>
+                                    <option value="3" {% if orderType == 3 %}selected{% endif %}>Sort by payment date
+                                    </option>
+                                    <option value="4" {% if orderType == 4 %}selected{% endif %}>Sort by parking payment
+                                    </option>
+                                </select>
+
+                                <button type="submit" class="btn btn-sm btn-secondary mr-2" id="sortButton">
+                                    Sort
+                                </button>
+                                <input type="text" class="form-control" name="search" placeholder="Search"
+                                       value="{{ search_query }}">
+                                <button type="submit" class="btn btn-sm btn-primary ml-2" id="searchButton">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            <div class="card-header">
+                <i class="fas fa-table"></i>
+                Information
+            </div>
+            <!--  -->
+            <div class="card-body">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Số hóa đơn</th>
+                        <th>Tên khách hàng</th>
+                        <th>Chí phí đỗ (VND)</th>
+                        <th>Trạng thái thanh toán</th>
+                        <th>Ngày thanh toán</th>
+                        <th>Hạn thanh toán</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ forloop.counter0 |add:page_obj.start_index }}</td>
+                        <td>{{ invoice.invoice_number }}</td>
+                        <td>{{ invoice.customer.first_name }} {{ invoice.customer.last_name }}</td>
+                        <td>{{ invoice.total_fee }}</td>
+                        <td>{{ invoice.payment_status }}</td>
+                        <td>{{ invoice.invoice_date }}</td>
+                        <td>{{ invoice.due_date }}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                    data-form-url="{% url 'invoice_detail' invoice.pk %}">
+                                <a href="{% url 'invoice_detail' invoice.pk %}" style="color:white;">
+                                    <span class="fa fa-eye">View</span>
+                                </a>
+                            </button>
+                            <button type="button" class="bs-modal btn btn-sm btn-danger"
+                                    data-form-url="{% url 'delete_invoice' invoice.pk %}">
+                                <span class="fa fa-trash"> Delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">Không tìm thấy hóa đơn nào.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% if is_paginated %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&order-list={{ orderType }}&search={{ search_query }}">&laquo; Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Previous</span>
+                    </li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }} <span class="sr-only">(current)</span></span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}&order-list={{ orderType }}&search={{ search_query }}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&order-list={{ orderType }}&search={{ search_query }}">Next &raquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

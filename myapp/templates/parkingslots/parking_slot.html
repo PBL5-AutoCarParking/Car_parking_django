@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="content-wrapper">
+  <div class="container-fluid">
+    {% for parking_slot in parking_slots %}
+    {% if forloop.counter0|divisibleby:3 %}
+    <div class="row">
+      {% endif %}
+      <div class="col-md-4">
+        <div class="card" data-slot-pk="{{ parking_slot.pk }}">
+          <div class="card-header">SLOT NUMBER {{ parking_slot.slot_number }}</div>
+          <div class="card-body">
+            {% if not parking_slot.is_available %}
+            <p>Loại bãi: {{ parking_slot.get_parking_type_display }}</p>
+            <p>Giá theo giờ: {{ parking_slot.cost_per_hour }}</p>
+            <!-- <p><strong>Car  {{ parking_slot.cost_per_day }}</strong></p> -->
+            <p>Time parked: {{ parking_slot.entry_time }}</p>
+            <p><strong>Available</strong></p>
+            <div>
+              <form method="post" action="{% url 'exit' %}">
+                {% csrf_token %}
+                <input type="hidden" name="parking_slot_pk" value="{{ parking_slot.pk }}">
+                <button type="submit">Exit</button>
+              </form>
+            </div>
+            {% else %}
+            <p>Parking type: {{ parking_slot.get_parking_type_display }}</p>
+            <p>Cost per day: {{ parking_slot.cost_per_day }}</p>
+            <p><strong>Empty</strong></p>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      {% if forloop.counter0|add:1|divisibleby:3 or forloop.last %}
+    </div>
+    {% endif %}
+    {% endfor %}
+
+  </div>
+</div>
+
+<div id="myModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Thêm nội dung của modal từ file parking_record_detail.html ở đây -->
+    </div>
+  </div>
+</div>
+
+
+{% block javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    $(".card").click(function () {
+      var slotPk = $(this).data("slot-pk");
+      $.ajax({
+        url: "{% url 'get_parking_record' 0 %}".replace('0', slotPk),
+        success: function (data) {
+          console.log(data)
+          if ('error' in data) {
+            alert("Slot nay trong");
+          } else {
+            $.ajax({
+              url: "{% url 'parking_record_detail' 0 %}".replace('0', data.parking_record_id),
+              success: function (data) {
+                $('#myModal .modal-content').html(data.html);
+                $('#myModal').modal('show');
+              }
+            })
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% load static %}
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!------ Include the above in your HEAD tag ---------->
+
+{% load socialaccount %}
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
+<!-- css -->
+<link rel="stylesheet" href="{% static 'home/register/css/style.css' %}">
+
+
+<div class="container">
+    <div class="card bg-light" style="margin-top: 70px;">
+        <article class="card-body mx-auto" style="max-width: 400px;">
+            <h4 class="card-title mt-3 text-center">Create Your Account Here</h4>
+            <p class="text-center">Get started with your free account</p>
+
+            <p>
+                <a href="{% url 'google_login' %}" class="btn btn-block btn-danger">
+                    <i class="fab fa-google"></i> Đăng nhập bằng Google
+                </a>
+            </p>
+            <p class="divider-text">
+                <span class="bg-light">OR</span>
+            </p>
+            <form id="my-form" method="post" action="{% url 'signup' %}">
+                {% csrf_token %}
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-user"></i> </span>
+                    </div>
+                    <input name="first_name" class="form-control" placeholder="First name" type="text">
+                    {% for error in form.firstname.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <input name="last_name" class="form-control" placeholder="Last name" type="text">
+                    <!-- {{ form.username }} -->
+                    {% for error in form.lastname.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div> <!-- form-group// -->
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
+                    </div>
+                    <input name="email" class="form-control" placeholder="Email address" type="email">
+                    {% for error in form.email.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div> <!-- form-group// -->
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-phone"></i> </span>
+                    </div>
+                    <select class="custom-select" style="max-width: 120px;">
+                        <option selected="">+84</option>
+                    </select>
+                    <input name="phone_number" class="form-control" placeholder="Phone number" type="text">
+                </div> <!-- form-group// -->
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-building"></i> </span>
+                    </div>
+                    <input class="form-control" name="card_number" placeholder="Card Number"/>
+
+                </div> <!-- form-group end.// -->
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                    </div>
+                    <input name="password1" class="form-control" placeholder="Create password" type="password">
+                    {% for error in form.password1.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div> <!-- form-group// -->
+                <div class="form-group input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"> <i class="fa fa-lock"></i> </span>
+                    </div>
+                    <input name="password2" class="form-control" placeholder="Repeat password" type="password">
+                    {% for error in form.password2.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div> <!-- form-group// -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block"> Create Account</button>
+                </div> <!-- form-group// -->
+                <p class="text-center">Have an account? <a href="{% url 'login' %}">Log In</a></p>
+            </form>
+        </article>
+    </div>
+</div>
+<div>
+    {% for error in form.errors %}
+    <p>{{ error }}</p>
+    {% endfor %}
+</div>
+<script>
+const form = document.querySelector('form');
+form.addEventListener('click', function(event) {
+  const invalidFeedbacks = form.querySelectorAll('.invalid-feedback');
+  invalidFeedbacks.forEach(function(feedback) {
+    feedback.style.display = 'none';
+  });
+});
+
+
+
+</script>

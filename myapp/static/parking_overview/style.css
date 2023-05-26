@@ -1,0 +1,9 @@
+.car-background {
+            background-image: url('img/my_car.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+.car-image {
+            background-size: cover;
+            background-position: center;
+            height: 200px;

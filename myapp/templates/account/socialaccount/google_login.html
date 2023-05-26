@@ -1,0 +1,14 @@
+{% extends 'account/socialaccount/google_login.html' %}
+{% block content %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Sign In Via Google</h1>
+    <p>You are about to sign in using a third-party account from Google.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-primary" type="submit">Continue</button>
+    </form>
+</div>
+{% endblock %}

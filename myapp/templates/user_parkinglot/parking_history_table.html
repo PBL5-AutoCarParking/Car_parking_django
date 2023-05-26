@@ -1,0 +1,138 @@
+{% block content %}
+<div id="content-wrapper">
+    <div class="container-fluid">
+        <h1 class="text-center">Parking history</h1>
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-sm-9">
+                        <form method="GET" action="{% url 'parking_history' %}">
+                            <div class="form-inline d-flex align-items-center">
+                                <select class="form-control mr-2" id="OrderFormControlSelect" name="order-list">
+                                    <option value="1" {% if orderType == '1' %}selected{% endif %}>Sort by id </option>
+                                    <option value="2" {% if orderType == '2' %}selected{% endif %}>Sort by entry time
+                                    </option>
+                                    <option value="3" {% if orderType == '3' %}selected{% endif %}>Sort by exit time
+                                    </option>
+                                    <option value="4" {% if orderType == '4' %}selected{% endif %}>Sort by cost
+                                    </option>
+                                    <option value="5" {% if orderType == '5' %}selected{% endif %}>Sort by paid
+                                    </option>
+                                </select>
+
+                                <button type="submit" class="btn btn-sm btn-secondary mr-2" id="sortButton">
+                                    Sort
+                                </button>
+                                <input type="text" class="form-control" name="search" placeholder="Search"                                       >
+                                <button type="button" class="btn btn-sm btn-primary ml-2" id="searchButton">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-header">
+                <i class="fas fa-table"></i>
+                Information
+            </div>
+            <!--  -->
+            <div class="card-body">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th> No</th>
+                        <th> Car License Number</th>
+                        <th> Slot number</th>
+                        <th> Start time</th>
+                        <th> End time</th>
+                        <th> Fee</th>
+                        <th> Paid status</th>
+                        <th> Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if parking_records %}
+                    {% for record in parking_records %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ record.car.license_plate }}</td>
+                        <td>{{ record.parking_slot.slot_number }}</td>
+                        <td>{{ record.entry_time }}</td>
+                        <td>{{ record.exit_time }}</td>
+                        <td>{{ record.total_cost }}</td>
+
+                        {% if record.car.is_paid  %}
+                        <td><span class="badge badge-success">Paid</span></td>
+                        <td><button type="button" class="bs-modal read-book btn btn-sm btn-primary"
+                                    data-form-url="">
+                            <span class="fas fa-comments-dollar">Đã thanh toán.</span>
+                        </button></td>
+                        {% else %}
+                        <td><span class="badge badge-danger">Unpaid</span></td>
+                        <td>
+                            <button type="button" class="bs-modal read-book btn btn-sm btn-primary"
+                                    data-form-url="">
+                                <span class="fas fa-comments-dollar">Pay</span>
+                            </button>
+                        </td>
+                        {% endif  %}
+
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="4">No parking history found..</td>
+                    </tr>
+                    {% endif %}
+
+                    </tbody>
+                </table>
+
+                {% if is_paginated %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&order-list={{ orderType }}&search={{ search_query }}">&laquo; Previous</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">&laquo; Previous</span>
+                    </li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }} <span class="sr-only">(current)</span></span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}&order-list={{ orderType }}&search={{ search_query }}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&order-list={{ orderType }}&search={{ search_query }}">Next &raquo;</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next &raquo;</span>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+
+
+
+
