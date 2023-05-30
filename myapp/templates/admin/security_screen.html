@@ -1,0 +1,42 @@
+<!-- security_screen.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h1>Camera Image Stream</h1>
+            <div class="canvas-wrapper">
+                <canvas id="image-canvas" width="{{ width }}" height="{{ height }}"></canvas>
+            </div>
+            <div class="capture-image-wrapper">
+                <img id="capture-image" src="" alt="Capture Image">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h2>License Plate:</h2>
+            <p id="license-plate">Not found</p>
+            <h2>UUID:</h2>
+            <p id="uuid">Not found</p>
+            <div class="buttons-wrapper">
+                <button id="start-btn" class="btn btn-primary">Start</button>
+                <button id="stop-btn" class="btn btn-danger">Stop</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+document.getElementById('start-btn').addEventListener('click', start);
+document.getElementById('stop-btn').addEventListener('click', stop);
+
+function start() {
+}
+
+function stop() {
+}
+</script>
+{% endblock %}

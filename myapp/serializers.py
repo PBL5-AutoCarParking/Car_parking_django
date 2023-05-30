@@ -1,12 +1,14 @@
 from rest_framework import serializers
-from .models import Car,Customer
+from .models import Car, ParkingRecord
 
 class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = '__all__'
 
-class CustomerSerializer(serializers.ModelSerializer):
+#
+
+class ParkingRecordSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Customer
+        model = ParkingRecord
         fields = '__all__'

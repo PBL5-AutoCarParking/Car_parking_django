@@ -1,3 +1,4 @@
+{% load widget_tweaks %}
 {% load static %}
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
@@ -26,20 +27,36 @@
             </p>
             <form id="my-form" method="post" action="{% url 'signup' %}">
                 {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"> <i class="fa fa-user"></i> </span>
+                            </div>
+                            {{ form.first_name|add_class:"form-control" }}
+                            {% for error in form.first_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <div class="input-group">
+                            {{ form.last_name|add_class:"form-control" }}
+                            {% for error in form.last_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text"> <i class="fa fa-user"></i> </span>
                     </div>
-                    <input name="first_name" class="form-control" placeholder="First name" type="text">
-                    {% for error in form.firstname.errors %}
+                    <input name="username" class="form-control" placeholder="Username" type="text">
+                    {% for error in form.username.errors %}
                     <div class="invalid-feedback">{{ error }}</div>
                     {% endfor %}
-                    <input name="last_name" class="form-control" placeholder="Last name" type="text">
-                    <!-- {{ form.username }} -->
-                    {% for error in form.lastname.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div> <!-- form-group// -->
+                </div>
                 <div class="form-group input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text"> <i class="fa fa-envelope"></i> </span>
@@ -56,14 +73,19 @@
                     <select class="custom-select" style="max-width: 120px;">
                         <option selected="">+84</option>
                     </select>
-                    <input name="phone_number" class="form-control" placeholder="Phone number" type="text">
+                    {{ form.phone_number|add_class:"form-control" }}
+                    {% for error in form.phone_number.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
                 </div> <!-- form-group// -->
                 <div class="form-group input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text"> <i class="fa fa-building"></i> </span>
                     </div>
-                    <input class="form-control" name="card_number" placeholder="Card Number"/>
-
+                    {{ form.card_number|add_class:"form-control" }}
+                    {% for error in form.card_number.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
                 </div> <!-- form-group end.// -->
                 <div class="form-group input-group">
                     <div class="input-group-prepend">
@@ -104,7 +126,4 @@ form.addEventListener('click', function(event) {
     feedback.style.display = 'none';
   });
 });
-
-
-
 </script>

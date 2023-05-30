@@ -115,12 +115,6 @@
         </li>
         {% if user.is_superuser or user.is_admin %}
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'customer_list' %}">
-                <i class="fa fa-id-card text-primary"></i>
-                <span style="color: white"> Customer Management</span>
-            </a>
-        </li>
-        <li class="nav-item">
             <a class="nav-link" href="{% url 'car_list' %}">
                 <i class="fas fa-car-alt text-primary"></i>
                 <span style="color: white"> Car Management</span>

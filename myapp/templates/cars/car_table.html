@@ -32,7 +32,24 @@
                                     Search
                                 </button>
                             </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" id="status-all" value="" {% if status_filter is None %}checked{% endif %}>
+                                <label class="form-check-label" for="status-all">All</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" id="status-activated" value="activated" {% if status_filter == 'activated' %}checked{% endif %}>
+                                <label class="form-check-label" for="status-activated">Activated</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="status" id="status-deactivated" value="deactivated" {% if status_filter == 'deactivated' %}checked{% endif %}>
+                                <label class="form-check-label" for="status-deactivated">Deactivated</label>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary ml-2" id="filterButton">
+                                Filter
+                            </button>
                         </form>
+
+
                     </div>
                 </div>
             </div>

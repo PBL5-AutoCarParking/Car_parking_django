@@ -45,12 +45,12 @@
                                             <label for="first_name">First name</label>
                                             <input type="text" class="form-control" name="first_name" id="first_name"
                                                    title="Enter your first name if any."
-                                                   value="{{customer.first_name}}">
+                                                   value="{{user.first_name}}">
                                         </div>
                                         <div class="form-group">
                                             <label for="last_name">Last name</label>
                                             <input type="text" class="form-control" name="last_name" id="last_name"
-                                                   title="Enter your last name if any." value="{{customer.last_name}}">
+                                                   title="Enter your last name if any." value="{{user.last_name}}">
                                         </div>
                                         <div class="form-group">
                                             <label for="email">Tên đăng nhập</label>
@@ -61,25 +61,25 @@
                                         <div class="form-group">
                                             <label for="phone">Phone</label>
                                             <input type="text" class="form-control" name="phone_number" id="phone"
-                                                   value="{{customer.phone_number}}"
+                                                   value="{{user.phone_number}}"
                                                    title="Enter your phone number if any.">
                                         </div>
                                         <div class="form-group">
                                             <label for="card_number">Card Number</label>
                                             <input type="text" class="form-control" name="card_number" id="card_number"
                                                    title="Enter your mobile number if any."
-                                                   value="{{customer.card_number}}">
+                                                   value="{{user.card_number}}">
                                         </div>
                                         <div class="form-group">
                                             <label for="email">Email</label>
                                             <input type="email" class="form-control" name="email" id="email"
                                                    placeholder="you@email.com" title="Enter your email."
-                                                   value="{{ customer.user.email}}">
+                                                   value="{{ user.email}}">
                                         </div>
                                         <div class="form-group">
                                             <label for="location"><h4>Location</h4></label>
                                             <input type="text" class="form-control" id="location" name="location"
-                                                   title="enter a location" value="{{customer.location}}"/>
+                                                   title="enter a location" value="{{user.location}}"/>
                                         </div>
                                         <div class="form-group">
                                             <div class="col-xs-12">
@@ -162,6 +162,12 @@
         </div>
     </div>
 </div>
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
 {% endblock %}
 
 {% block extrascripts %}
@@ -181,7 +187,8 @@
 {% endfor %}
 
 
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
 <script>
         $('.toast').toast('show');

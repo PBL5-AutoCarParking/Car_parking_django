@@ -1,8 +1,7 @@
 from django.forms.utils import ValidationError
-from .models import Customer, Car, ParkingRecord, ParkingSlot, Invoice
+from .models import Car, ParkingRecord, ParkingSlot, Invoice
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import Customer
 from bootstrap_modal_forms.forms import BSModalModelForm, BSModalForm
 from bootstrap_modal_forms.mixins import PopRequestMixin, CreateUpdateAjaxMixin
 from django.contrib.auth import get_user_model
@@ -15,23 +14,35 @@ import re
 User = get_user_model()  # QUan trọng
 
 
+# UserCreationForm lớp con != forms.Form
 class MyRegistrationForm(UserCreationForm):
     email = forms.EmailField(max_length=254, required=True,
                              help_text='Required. Enter a valid email address.')
     first_name = forms.CharField(
-        max_length=30, required=True, help_text='Required. Enter your first name.')
+        max_length=30, required=True, help_text='Required. Enter your first name.',
+        widget=forms.TextInput(attrs={'placeholder': 'First name'}))
 
-    last_name = forms.CharField(max_length=30, required=True, help_text='Required. Enter your last name.')
+    last_name = forms.CharField(max_length=30, required=True, help_text='Required. Enter your last name.',
+                                widget=forms.TextInput(attrs={'placeholder': 'First name'}))
 
     phone_number = forms.CharField(
-        max_length=30, required=True, help_text='Required. Enter your phone number.')
+        max_length=30, required=True, help_text='Required. Enter your phone number.',
+        widget=forms.TextInput(attrs={'placeholder': 'Phone number'}))
+
     card_number = forms.CharField(
+        max_length=100, required=True, help_text='Required. Enter your card number.',
+        widget=forms.TextInput(attrs={'placeholder': 'Card number'}))
+
+    username = forms.CharField(
         max_length=100, required=True, help_text='Required. Enter your card number.')
 
-    class Meta:
-        model = User  # 'confirm_password',
-        fields = ['email', 'password1', 'password2',
-                  'first_name', 'last_name', 'phone_number', 'card_number']
+    class Meta(UserCreationForm.Meta):
+        model = get_user_model()
+        fields = ('email', 'first_name', 'last_name', 'phone_number', 'card_number', 'password1', 'password2')
+
+    # class Meta(UserCreationForm.Meta):
+    #     model = get_user_model()
+    #     fields = ('email', 'first_name', 'last_name', 'phone_number', 'card_number')
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -40,11 +51,15 @@ class MyRegistrationForm(UserCreationForm):
                 'This email address is already in use.')
         return email
 
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if username and User.objects.filter(username=username).exists():
-            raise forms.ValidationError('This username is already in use.')
-        return username
+    def clean_card_number(self):
+        card_number = self.cleaned_data.get('card_number')
+        # Xóa tất cả các ký tự không phải số trong số thẻ
+        card_number = re.sub(r'\D', '', card_number)
+
+        # Kiểm tra độ dài số thẻ
+        if len(card_number) != 12:
+            raise forms.ValidationError('Card number must have 12 digits.')
+        return card_number
 
     def clean_password1(self):
         password1 = self.cleaned_data.get('password1')
@@ -70,33 +85,31 @@ class EmailVerificationForm(forms.Form):
     token = forms.UUIDField()
 
 
-class CustomerForm(BSModalModelForm):
-    def __init__(self, *args, **kwargs):
-        super(CustomerForm, self).__init__(*args, **kwargs)
-        self.fields['first_name'].widget.attrs = {
-            'class': 'form-control col-md-6'
-        }
-        self.fields['last_name'].widget.attrs = {
-            'class': 'form-control col-md-6'
-        }
-        self.fields['phone_number'].widget.attrs = {
-            'class': 'form-control col-md-6'
-        }
-        self.fields['location'].widget.attrs = {
-            'class': 'form-control col-md-6'
-        }
-
-    class Meta:
-        model = Customer
-        fields = ('first_name', 'last_name', 'phone_number', 'card_number', 'location')
+#
+# class CustomerForm(BSModalModelForm):
+#     def __init__(self, *args, **kwargs):
+#         super(CustomerForm, self).__init__(*args, **kwargs)
+#         self.fields['first_name'].widget.attrs = {
+#             'class': 'form-control col-md-6'
+#         }
+#         self.fields['last_name'].widget.attrs = {
+#             'class': 'form-control col-md-6'
+#         }
+#         self.fields['phone_number'].widget.attrs = {
+#             'class': 'form-control col-md-6'
+#         }
+#         self.fields['location'].widget.attrs = {
+#             'class': 'form-control col-md-6'
+#         }
+#
+#     class Meta:
+#         model = Customer
+#         fields = ('first_name', 'last_name', 'phone_number', 'card_number', 'location')
 
 
 class UserForm(BSModalModelForm):
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs = {
-            'class': 'form-control col-md-6'
-        }
         self.fields['first_name'].widget.attrs = {
             'class': 'form-control col-md-6'
         }
@@ -112,7 +125,7 @@ class UserForm(BSModalModelForm):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password')
+        fields = ('first_name', 'last_name', 'email', 'password')
 
 
 # class UserActiveForm(Mode)
@@ -128,9 +141,13 @@ class CarFormMixin(forms.ModelForm):
             raise forms.ValidationError('License plate must be a maximum of 12 characters.')
         return license_plate
 
+
 class CarForm(CarFormMixin, BSModalModelForm):
     # Loi tham so nay forms.ModelForm
-    owner = forms.ModelChoiceField(queryset=Customer.objects.all(), label='Owner', widget=forms.Select(attrs={'class': 'form-control col-md-6'}),to_field_name='__str__')
+    owner = forms.ModelChoiceField(queryset=User.objects.all(), label='Owner',
+                                   widget=forms.Select(attrs={'class': 'form-control col-md-6'}),
+                                   to_field_name='__str__')
+
     def __init__(self, *args, **kwargs):
         super(CarForm, self).__init__(*args, **kwargs)
         self.fields['license_plate'].widget.attrs = {
@@ -142,14 +159,19 @@ class CarForm(CarFormMixin, BSModalModelForm):
         self.fields['car_color'].widget.attrs = {
             'class': 'form-control col-md-6'
         }
+
     class Meta:
         model = Car
         exclude = ['timestamp']
         fields = ['license_plate',
-                  'car_model', 'car_color', 'owner' , 'image']
+                  'car_model', 'car_color', 'owner', 'image']
+
 
 class CreateCarForm(BSModalModelForm):
-    owner = forms.ModelChoiceField(queryset=Customer.objects.all(), label='Owner', widget=forms.Select(attrs={'class': 'form-control col-md-6'}),to_field_name='__str__')
+    # owner = forms.ModelChoiceField(queryset=User.objects.all(), label='Owner',
+    #                                widget=forms.Select(attrs={'class': 'form-control col-md-6'}),
+    #                                to_field_name='__str__')
+
     def __init__(self, *args, **kwargs):
         super(CreateCarForm, self).__init__(*args, **kwargs)
         self.fields['license_plate'].widget.attrs = {
@@ -161,6 +183,10 @@ class CreateCarForm(BSModalModelForm):
         self.fields['car_color'].widget.attrs = {
             'class': 'form-control col-md-6'
         }
+        self.fields['uuid'].widget.attrs = {
+            'class': 'form-control col-md-6'
+        }
+
     def clean_license_plate(self):
         license_plate = self.cleaned_data['license_plate']
         existing_car = Car.objects.filter(license_plate=license_plate).first()
@@ -171,14 +197,16 @@ class CreateCarForm(BSModalModelForm):
         if len(license_plate) > 12:
             raise forms.ValidationError('License plate must be a maximum of 12 characters.')
         return license_plate
+
     class Meta:
         model = Car
         exclude = ['timestamp']
         fields = ['license_plate',
-                  'car_model', 'car_color', 'owner' , 'image']
+                  'car_model', 'car_color', 'owner', 'image','uuid']
+
 
 class CarUpdateForm(forms.ModelForm):
-    owner = forms.ModelChoiceField(queryset=Customer.objects.all())
+    owner = forms.ModelChoiceField(queryset=User.objects.all())
 
     class Meta:
         model = Car
@@ -188,20 +216,18 @@ class CarUpdateForm(forms.ModelForm):
 class CreateParkingRecordForm(forms.ModelForm):
     class Meta:
         model = ParkingRecord
-        fields = ['car', 'parking_slot']
+        fields = ['car']
         widgets = {
             'car': forms.Select(attrs={'class': 'form-control col-md-6'}),
-            'parking_slot': forms.Select(attrs={'class': 'form-control col-md-6'})
         }
 
 
 class UpdateParkingRecordForm(BSModalModelForm):
     class Meta:
         model = ParkingRecord
-        fields = ['car', 'parking_slot', 'total_cost', 'is_paid', 'exit_time']
+        fields = ['car', 'total_cost', 'is_paid', 'exit_time']
         widgets = {
             'car': forms.Select(attrs={'class': 'form-control col-md-6'}),
-            'parking_slot': forms.Select(attrs={'class': 'form-control col-md-6'}),
             'total_cost': forms.NumberInput(attrs={'class': 'form-control col-md-6'}),
             'is_paid': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'exit_time': forms.DateTimeInput(attrs={'type': 'datetime-local'})
@@ -211,15 +237,11 @@ class UpdateParkingRecordForm(BSModalModelForm):
 class ParkingRecordDetailForm(BSModalModelForm):
     class Meta:
         model = ParkingRecord
-        fields = ('car', 'parking_slot',
-                  'exit_time', 'total_cost', 'is_paid')
+        fields = ('car', 'exit_time', 'total_cost', 'is_paid')
 
         def __init__(self, *args, **kwargs):
             super(CarForm, self).__init__(*args, **kwargs)
             self.fields['car'].widget.attrs = {
-                'class': 'form-control col-md-6'
-            }
-            self.fields['parking_slot'].widget.attrs = {
                 'class': 'form-control col-md-6'
             }
             self.fields['exit_time'].widget.attrs = {
@@ -244,6 +266,7 @@ class CreateUserCarForm(BSModalModelForm):
             'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'})
         }
 
+
 class UpdateUserCarForm(BSModalModelForm):
     class Meta:
         model = Car
@@ -259,7 +282,7 @@ class UpdateUserCarForm(BSModalModelForm):
 class UserCarModelForm(BSModalModelForm):
     class Meta:
         model = Car
-        fields = ['license_plate', 'car_model', 'car_color','owner']
+        fields = ['license_plate', 'car_model', 'car_color', 'owner']
 
 
 class UpdateInvoiceForm(forms.Form):
@@ -269,7 +292,8 @@ class UpdateInvoiceForm(forms.Form):
             ('direct', 'Direct'),
             ('online', 'Online'),
         )
-        payment_method = forms.ChoiceField(choices=PAYMENT_METHOD_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+        payment_method = forms.ChoiceField(choices=PAYMENT_METHOD_CHOICES,
+                                           widget=forms.Select(attrs={'class': 'form-control'}))
         fields = ['invoice_date', 'due_date', 'payment_date', 'payment_method', 'payment_status']
         widgets = {
             'invoice_date': forms.DateInput(attrs={'type': 'date'}),

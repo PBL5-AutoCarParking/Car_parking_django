@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.shortcuts import render
 
-from .models import Customer, User
+from .models import User
 # from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.contrib import messages
@@ -32,7 +32,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.http import HttpResponse
 
-from .forms import CustomerForm, UserForm, CarForm, CarUpdateForm
+from .forms import UserForm, CarForm, CarUpdateForm
 from .forms import UpdateParkingRecordForm, ParkingRecordDetailForm
 
 from django.http import HttpResponseRedirect, HttpResponse
@@ -45,7 +45,7 @@ from datetime import timedelta
 from django.core import serializers
 from django.conf import settings
 import os
-from .models import Customer, User, ParkingSlot, Car, ParkingRecord, Invoice
+from .models import User, ParkingSlot, Car, ParkingRecord, Invoice
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import auth
 from datetime import datetime, date
@@ -87,6 +87,9 @@ from django.forms.models import model_to_dict
 
 from django.conf.urls import handler404
 from google.cloud import storage
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from allauth.socialaccount.providers.oauth2.views import OAuth2CallbackView
 
 # Create your views here.
 
@@ -127,39 +130,70 @@ class SignupView(FormView):
     success_url = reverse_lazy('login')
 
     def form_valid(self, form):
-        return self.form_valid(form)
+        email = form.cleaned_data.get('email')
+        password1 = form.cleaned_data.get('password1')
+        first_name = form.cleaned_data.get('first_name')
+        last_name = form.cleaned_data.get('last_name')
+        phone_number = form.cleaned_data.get('phone_number')
+        card_number = form.cleaned_data.get('card_number')
+        username = form.cleaned_data.get('username')
+        # print(form.cleaned_data['username'])
+        user = User.objects.create_user(
+            email=email,
+            username=username,
+            password=password1,
+            first_name=first_name,
+            last_name=last_name,
+            phone_number=phone_number,
+            card_number=card_number
+        )
+        user.is_active = False
+        user.save()
+        send_email_verification(user)
+        print("valid")
+        return redirect('success_message')
 
-    def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        if form.is_valid():
-            email = request.POST.get('email')
-            password1 = request.POST.get('password1')
-            firstname = request.POST.get('first_name')
-            lastname = request.POST.get('last_name')
-            phone_number = request.POST.get('phone_number')
-            card_number = request.POST.get('card_number')
-            user = User.objects.create_user(
-                email=email,
-                username=email,
-                password=password1,
-            )
-            user.is_active = False
-            user.save()
-            customer = Customer.objects.create(
-                first_name=firstname,
-                last_name=lastname,
-                phone_number=phone_number,
-                card_number=card_number,
-                user=user
-            )
-            customer.save()
-            send_email_verification(user)
-
-            print("valid")
-            return redirect('success_message')
-        else:
-            print("invalid")
-            return redirect('signup')
+    def form_invalid(self, form):
+        print("invalid")
+        # print(form.cleaned_data['username'])
+        # username_errors = form.errors.get('username')
+        # if username_errors:
+        #     username_error = username_errors[0]
+        # else:
+        #     username_error = None
+        # print(username_error)
+        return render(self.request, self.template_name, {'form': form})
+    # def post(self, request, *args, **kwargs):
+    #     form = self.get_form()
+    #     if form.is_valid():
+    #         email = request.POST.get('email')
+    #         password1 = request.POST.get('password1')
+    #         firstname = request.POST.get('first_name')
+    #         lastname = request.POST.get('last_name')
+    #         phone_number = request.POST.get('phone_number')
+    #         card_number = request.POST.get('card_number')
+    #         user = User.objects.create_user(
+    #             email=email,
+    #             username=email,
+    #             password=password1,
+    #         )
+    #         user.is_active = False
+    #         user.save()
+    #         customer = Customer.objects.create(
+    #             first_name=firstname,
+    #             last_name=lastname,
+    #             phone_number=phone_number,
+    #             card_number=card_number,
+    #             user=user
+    #         )
+    #         customer.save()
+    #         send_email_verification(user)
+    #
+    #         print("valid")
+    #         return redirect('success_message')
+    #     else:
+    #         print("invalid")
+    #         return redirect('signup')
 
 
 def send_email_verification(user):
@@ -215,6 +249,15 @@ def google_login(request):
         redirect('google_signup')
 
 
+#
+# class GoogleCallbackView(OAuth2CallbackView):
+#     adapter_class = GoogleOAuth2Adapter
+#     client_class = OAuth2Client
+#     callback_url = '/accounts/google/login/callback/'
+# def google_callback(request):
+#     adapter = GoogleOAuth2Adapter(request)
+#     callback_url = reverse('google_login_callback')
+#     return redirect(adapter.get_authorize_url(request, callback_url))
 # Địa chỉ email chưa tồn tại, hiển thị thông báo lỗi hoặc chuyển hướng đến trang đăng ký
 # ...
 
@@ -314,15 +357,42 @@ class CarAPIList(generics.ListCreateAPIView):
     # template = ''
 
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from datetime import datetime
+
+
+@api_view(['POST'])
+def car_entry(request):
+    license_plate = request.data.get('license_plate')
+    # start_date = request.data.get('start_date')
+    current_date = datetime.now().date()
+
+    try:
+        pr = ParkingRecord.objects.get(license_plate=license_plate)
+        # car = Car.objects.get(license_plate=license_plate)
+        if car.exit_time:
+            # Xe đã ra khỏi bãi
+            return Response({'message': 'Xe đã ra khỏi bãi.'})
+        else:
+            # Xe đang trong bãi
+            return Response({'message': 'Xe đã có trong bãi.'})
+    except Car.DoesNotExist:
+        # Tạo mới một record cho xe
+        car = Car(license_plate=license_plate, start_date=start_date)
+        car.save()
+        return Response({'message': 'Đỗ xe thành công.'})
+
+
 from django.db.models import Q
 
 
 def showCarList(request):
     orderType = request.GET.get('order-list')
     search_query = request.GET.get('search')
-    cars = Car.objects.order_by('id').all()
-    if search_query is None:
-        search_query = ''
+    status_filter = request.GET.get('status')  # Tham số lọc theo trạng thái
+    cars = Car.objects.order_by('id').filter(status=1)
+
     if search_query:
         filtered_cars = cars.filter(
             Q(license_plate__icontains=search_query) |
@@ -332,7 +402,14 @@ def showCarList(request):
             Q(owner__last_name__icontains=search_query)
         )
     else:
+        search_query = ''
         filtered_cars = cars
+    if status_filter:
+        # Lọc theo trạng thái
+        if status_filter == 'activated':
+            filtered_cars = filtered_cars.filter(is_active=True)
+        elif status_filter == 'deactivated':
+            filtered_cars = filtered_cars.filter(is_active=False)
 
     if orderType == '1':
         filtered_cars = filtered_cars.order_by('id')
@@ -346,9 +423,13 @@ def showCarList(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     # context = {'cars': cars, 'page_obj': page_obj, 'orderType': orderType, 'search_query': search_query}  # Thêm context
-    context = {'cars': page_obj, 'page_obj': page_obj, 'orderType': orderType,
-               'search_query': search_query, 'is_paginated': page_obj.has_other_pages(),
-               'paginator': paginator}  # Thêm context
+    context = {'cars': page_obj,
+               'page_obj': page_obj,
+               'orderType': orderType,
+               'search_query': search_query,
+               'is_paginated': page_obj.has_other_pages(),
+               'paginator': paginator,
+               'status_filter': status_filter}
     return render(request, 'cars/car_list.html', context)
 
 
@@ -506,69 +587,70 @@ class CarDeleteView(BSModalDeleteView):
     success_url = reverse_lazy('car_list')
 
 
-def showCustomerList(request):
-    orderType = request.GET.get('order-list')
-    search_query = request.GET.get('search')
-    if not orderType:
-        orderType = 1
-    if not search_query:
-        search_query = ''
-    customers = Customer.objects.order_by('id')
-
-    if search_query:
-        customers = customers.filter(
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query) |
-            Q(phone_number__icontains=search_query) |
-            Q(card_number__icontains=search_query)
-        )
-
-    if orderType == '1':
-        customers = customers.order_by('id')
-    elif orderType == '2':
-        customers = customers.order_by('first_name')
-    elif orderType == '3':
-        customers = customers.order_by('reg_date')
-
-    paginator = Paginator(customers, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    context = {'customers': page_obj, 'page_obj': page_obj, 'orderType': orderType,
-               'search_query': search_query, 'is_paginated': page_obj.has_other_pages(),
-               'paginator': paginator}  # Thêm context
-    return render(request, 'customers/customer_list.html', context)
-
-
-class CustomerCreateView(BSModalCreateView):
-    template_name = 'customers/create_customer.html'
-    form_class = CustomerForm
-    success_message = 'Success: Customer was created.'
-    success_url = reverse_lazy('customer_list')
-
-
-class CustomerDetailView(BSModalReadView):
-    model = Customer
-    template_name = 'customers/customer_view.html'
-    form_class = CustomerForm
-
-
-class CustomerUpdateView(BSModalUpdateView):
-    model = Customer
-    template_name = 'customers/customer_update.html'
-    form_class = CustomerForm
-    success_message = 'Customer update succesfully'
-    success_url = reverse_lazy('customer_list')
-    # def get_success_url(self):
-    #     return reverse_lazy('car_list',kwargs={'pk': self.get_object().id})
-
-
-class CustomerDeleteView(BSModalDeleteView):
-    model = Customer
-    template_name = 'customers/customer_delete.html'
-    form_class = CustomerForm
-    success_message = 'Customer delete succesfully'
-    success_url = reverse_lazy('customer_list')
-
+#
+# def showCustomerList(request):
+#     orderType = request.GET.get('order-list')
+#     search_query = request.GET.get('search')
+#     if not orderType:
+#         orderType = 1
+#     if not search_query:
+#         search_query = ''
+#     customers = Customer.objects.order_by('id')
+#
+#     if search_query:
+#         customers = customers.filter(
+#             Q(first_name__icontains=search_query) |
+#             Q(last_name__icontains=search_query) |
+#             Q(phone_number__icontains=search_query) |
+#             Q(card_number__icontains=search_query)
+#         )
+#
+#     if orderType == '1':
+#         customers = customers.order_by('id')
+#     elif orderType == '2':
+#         customers = customers.order_by('first_name')
+#     elif orderType == '3':
+#         customers = customers.order_by('reg_date')
+#
+#     paginator = Paginator(customers, 5)
+#     page_number = request.GET.get('page')
+#     page_obj = paginator.get_page(page_number)
+#     context = {'customers': page_obj, 'page_obj': page_obj, 'orderType': orderType,
+#                'search_query': search_query, 'is_paginated': page_obj.has_other_pages(),
+#                'paginator': paginator}  # Thêm context
+#     return render(request, 'customers/customer_list.html', context)
+#
+#
+# class CustomerCreateView(BSModalCreateView):
+#     template_name = 'customers/create_customer.html'
+#     form_class = CustomerForm
+#     success_message = 'Success: Customer was created.'
+#     success_url = reverse_lazy('customer_list')
+#
+#
+# class CustomerDetailView(BSModalReadView):
+#     model = Customer
+#     template_name = 'customers/customer_view.html'
+#     form_class = CustomerForm
+#
+#
+# class CustomerUpdateView(BSModalUpdateView):
+#     model = Customer
+#     template_name = 'customers/customer_update.html'
+#     form_class = CustomerForm
+#     success_message = 'Customer update succesfully'
+#     success_url = reverse_lazy('customer_list')
+#     # def get_success_url(self):
+#     #     return reverse_lazy('car_list',kwargs={'pk': self.get_object().id})
+#
+#
+# class CustomerDeleteView(BSModalDeleteView):
+#     model = Customer
+#     template_name = 'customers/customer_delete.html'
+#     form_class = CustomerForm
+#     success_message = 'Customer delete succesfully'
+#     success_url = reverse_lazy('customer_list')
+#
 
 def get_parking_record(request, pk):
     try:
@@ -740,10 +822,10 @@ def show_parking_overview(request):
     user = request.user
     try:
         if user.is_active:
-            customer = Customer.objects.get(user=user)
-            cars = Car.objects.filter(owner=customer, is_parking=False, is_active=True) if customer else []
+            # customer = Customer.objects.get(user=user)
+            cars = Car.objects.filter(owner=user, is_parking=False, is_active=True) if user else []
 
-    except Customer.DoesNotExist:
+    except user.DoesNotExist:
         # Handle the case when the user is not a customer
         pass
     return render(request, 'parking_overview.html', {'parking_slots': parking_slots, 'cars': cars})
@@ -825,8 +907,8 @@ class UserCarList(ListView):
     def get(self, request):
         orderType = request.GET.get('order-list')
         search_query = request.GET.get('search')
-        customer = Customer.objects.get(user=self.request.user)
-        cars = Car.objects.filter(owner=customer)
+        # customer = Customer.objects.get(user=self.request.user)
+        cars = Car.objects.filter(owner=self.request.user)
 
         if search_query:
             cars = cars.filter(
@@ -866,13 +948,6 @@ class CreateUserCarView(BSModalCreateView):
         form = self.get_form()
         if form.is_valid():
             user = self.request.user
-            try:
-                customer = Customer.objects.get(user=user)
-            except Customer.DoesNotExist:
-                # handle case where user is not linked with customer
-                messages.error(request, 'Vui lòng cập nhật thông tin khách hàng trước khi đăng ký xe.')
-                return redirect('profile')
-            # Process the valid form data and return JSON response
             license_plate = form.cleaned_data['license_plate']
             car_model = form.cleaned_data['car_model']
             car_color = form.cleaned_data['car_color']
@@ -897,9 +972,10 @@ class CreateUserCarView(BSModalCreateView):
                     license_plate=license_plate,
                     car_model=car_model,
                     car_color=car_color,
-                    owner=Customer.objects.get(user=self.request.user),
+                    owner=user,
                     image=image,
-                    image_url=image_url
+                    image_url=image_url,
+                    status=1
                 )
                 car.save()
 
@@ -933,29 +1009,37 @@ class UserCarUpdateView(BSModalUpdateView):
             license_plate = form.cleaned_data['license_plate']
             car_model = form.cleaned_data['car_model']
             car_color = form.cleaned_data['car_color']
-            image = form.cleaned_data['image']
-            if image:
-                # Tạo tên file mới ngẫu nhiên
-                filename = f"{license_plate}-{uuid4().hex}.jpg"
+            try:
+                image = form.cleaned_data['image']
+                if image:
+                    # Tạo tên file mới ngẫu nhiên
+                    filename = f"{license_plate}-{uuid4().hex}.jpg"
 
-                # Lưu file vào bucket trên Firebase Storage
-                bucket_name = "carparkingsystem-8d374.appspot.com"  # not include gs://
-                bucket = client.bucket(bucket_name)
-                folder_path = "car_images/"
-                blob = bucket.blob(folder_path + filename)
-                blob.upload_from_string(image.read(), content_type='image/jpeg')
+                    # Lưu file vào bucket trên Firebase Storage
+                    bucket_name = "carparkingsystem-8d374.appspot.com"  # not include gs://
+                    bucket = client.bucket(bucket_name)
+                    folder_path = "car_images/"
+                    blob = bucket.blob(folder_path + filename)
+                    blob.upload_from_string(image.read(), content_type='image/jpeg')
 
-                # Lấy URL của ảnh từ Firebase Storage
-                image_url = blob.public_url
-                print(image_url)
-                # Tạo instance mới để lưu vào database
-                self.object.image.name = filename
+                    # Lấy URL của ảnh từ Firebase Storage
+                    image_url = blob.public_url
+                    print(image_url)
+                    # Tạo instance mới để lưu vào database
+                    self.object.image.name = filename
+                    self.object.image_url = image_url
+            except KeyError:
+                image = None
+                image_url = None
+                self.object.image = image
                 self.object.image_url = image_url
+
             # Cập nhật các thông tin khác của instance trong database
             self.object.license_plate = license_plate
             self.object.car_model = car_model
             self.object.car_color = car_color
-            self.object.owner = Customer.objects.get(user=self.request.user)
+            self.object.owner = self.request.user
+            self.object.is_active = False
             self.object.save()
             return redirect('user_car_list')
         else:
@@ -988,69 +1072,66 @@ class ProfileView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        try:
-            if self.request.user.is_customer and self.request.user.is_authenticated:
-                customer = Customer.objects.get(user=self.request.user)
-                context['customer'] = customer
-
-        except ObjectDoesNotExist:
-            customer = None
-
         context['user'] = user
         return context
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        phone_number = request.POST.get('phone_number')
+        card_number = request.POST.get('card_number')
+        location = request.POST.get('location')
+
+        if not first_name or not last_name or not phone_number or not card_number or not location:
+            return render(request, 'profile.html', {'error': 'All fields are required'})
+
+        if len(phone_number) != 10 or not phone_number.isdigit():
+            return render(request, 'profile.html', {'error': 'Invalid phone number'})
+
+        if len(card_number) != 12 or not card_number.isdigit():
+            return render(request, 'profile.html', {'error': 'Invalid card number'})
+
+        # Check if phone number or card number already exists for another user
+        if User.objects.filter(phone_number=phone_number).exclude(id=user.id).exists():
+            return render(request, 'profile.html', {'error': 'Phone number is already taken'})
+
+        if User.objects.filter(card_number=card_number).exclude(id=user.id).exists():
+            return render(request, 'profile.html', {'error': 'Card number is already taken'})
+
+        # Update user's profile here
+
+        return render(request, 'profile.html', {'success': 'Profile updated successfully'})
 
 
 def save_profile(request):
     if request.method == "POST":
-        try:
-            myuser = request.user
-            customer = Customer.objects.get(user=myuser)
-            customer.first_name = request.POST.get('first_name')
-            customer.last_name = request.POST.get('last_name')
-            customer.user.first_name = request.POST.get('first_name')
-            customer.user.last_name = request.POST.get('last_name')
-            customer.phone_number = request.POST.get('phone_number')
-            customer.card_number = request.POST.get('card_number')
-            customer.location = request.POST.get('location')
+        my_user = request.user
+        if my_user.is_admin:  # TRường hợp 1 là admin không có customer
+            my_user.first_name = request.POST.get('first_name')
+            my_user.last_name = request.POST.get('last_name')
+            my_user.username = request.POST.get('username')
+            my_user.email = request.POST.get('email')
             avatar = request.FILES.get('avatar')
-            customer.username = request.POST.get('email')
             if avatar:
-                customer.user.avatar = avatar
-            if customer.reg_date is None:
-                customer.reg_date = timezone.now()
-            customer.user.save()
-            customer.save()
+                my_user.avatar = avatar
+            my_user.save()
+
+        else:
+            my_user.first_name = request.POST.get('first_name')
+            my_user.last_name = request.POST.get('last_name')
+            my_user.phone_number = request.POST.get('phone_number')
+            my_user.card_number = request.POST.get('card_number')
+            my_user.location = request.POST.get('location')
+            avatar = request.FILES.get('avatar')
+            my_user.username = request.POST.get('username')
+            if avatar:
+                my_user.avatar = avatar
+            if my_user.reg_date is None:
+                my_user.reg_date = timezone.now()
+            my_user.save()
             messages.success(request, 'Your profile has been updated successfully.')
 
-        except ObjectDoesNotExist:
-            print("No customer")
-            # customer = None
-            user = request.user
-            if user.is_admin:  # TRường hợp 1 là admin không có customer
-                user.first_name = request.POST.get('first_name')
-                user.last_name = request.POST.get('last_name')
-                user.username = request.POST.get('username')
-                user.email = request.POST.get('email')
-                avatar = request.FILES.get('avatar')
-                if avatar:
-                    user.avatar = avatar
-                user.save()
-
-            else:  # TRường hợp 2 là user đăng nhập bằng email không có customer
-                customer = Customer(
-                    user=request.user,
-                    first_name=request.POST.get('first_name'),
-                    last_name=request.POST.get('last_name'),
-                    phone_number=request.POST.get('phone_number'),
-                    card_number=request.POST.get('card_number'),
-                    location=request.POST.get('location')
-                )
-                avatar = request.FILES.get('avatar')
-                if avatar:
-                    user.avatar = avatar
-                user.save()
-                customer.save()
-        messages.error(request, 'No customer information')
         return redirect('profile')
 
 
@@ -1095,8 +1176,7 @@ class UserView(ListView):
                 Q(username__icontains=search_query)
             )
         else:
-            search_query=''
-
+            search_query = ''
 
         paginator = Paginator(users, 5)
         page_number = request.GET.get('page')
@@ -1177,8 +1257,8 @@ class ReserveSlotView(BSModalReadView):
 ## Hiển thị lịch sử:
 def parking_history(request):
     try:
-        customer = Customer.objects.get(user=request.user)
-        cars = customer.cars.all()
+        # customer = Customer.objects.get(user=request.user)
+        cars = request.user.cars.all()
         parking_records = ParkingRecord.objects.filter(car__in=cars)
 
         orderType = request.GET.get('order-list')
@@ -1255,7 +1335,7 @@ class InvoiceListView(ListView):
         if search_query:
             filtered_invoices = invoices.filter(
                 Q(invoice_number__icontains=search_query) |
-                Q(customer__first_name__icontains=search_query)|
+                Q(customer__first_name__icontains=search_query) |
                 Q(customer__last_name__icontains=search_query)
             )
         else:
@@ -1280,14 +1360,14 @@ class InvoiceListView(ListView):
 
 
 def customer_invoices(request):
-    customer = Customer.objects.get(user=request.user)
-    customer_invoices = Invoice.objects.filter(customer=customer)
+    # customer = Customer.objects.get(user=request.user)
+    cus_name = str(request.user.first_name) + str(request.user.last_name)
+    customer_invoices = Invoice.objects.filter(customer_name=cus_name)
 
     orderType = request.GET.get('order-list')
     search_query = request.GET.get('search')
     if search_query is None:
         search_query = ''
-    customer_invoices = Invoice.objects.all()
 
     if search_query:
         filtered_invoices = customer_invoices.filter(
@@ -1453,7 +1533,6 @@ def online_payment_view(request):
 
             parking_record.total_cost = rounded_hours * parking_slot.cost_per_hour
             parking_record.save()
-
             parking_slot.is_available = True
             # parking_slot.exit_time = timezone.now()
             parking_slot.save()
@@ -1496,3 +1575,136 @@ def online_payment_view(request):
             # Handle the case where there is no matching ParkingRecord object
             messages.error(request, 'No parking record found for this parking slot.')
             return redirect(reverse('show_parking_overview'))
+
+
+@api_view(['POST'])
+def create_car(request):
+    serializer = CarSerializer(data=request.data)
+    if serializer.is_valid():
+        car = serializer.save(is_active=True, is_parking=True, status=2)
+        # Tạo một ParkingRecord mới cho Car
+        parking_record = ParkingRecord.objects.create(car=car)
+        return Response({'success': True})
+    return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+def update_parking_record(request):
+    car_license_plate = request.data.get('license_plate')
+    car_uuid = request.data.get('uuid')
+
+    try:
+        car = Car.objects.get(license_plate=car_license_plate, uuid=car_uuid)
+    except Car.DoesNotExist:
+        return Response({'error': 'Car not found'}, status=404)
+
+    parking_record = ParkingRecord.objects.filter(car=car, exit_time=None).first()
+    if parking_record:
+        # Xe đã ra khỏi bãi đỗ
+        parking_record.exit_time = timezone.now()
+        parking_record.save()
+        return Response({'success': True})
+
+    return Response({'error': 'Parking record not found'}, status=404)
+
+
+from .serializers import CarSerializer, ParkingRecordSerializer
+
+
+def checking_full_slot():
+    return ParkingSlot.objects.filter(is_available=1) > 0  # tra ve true neu con cho
+
+
+def find_empty_parking_slot():
+    try:
+        # Lấy record đầu tiên có vị trí còn trống
+        parking_slot = ParkingSlot.objects.filter(is_available=True).first()
+        return parking_slot
+    except ParkingSlot.DoesNotExist:
+        return None
+
+
+@api_view(['POST'])
+def entry_car(request):
+    if checking_full_slot:
+        license_plate = request.data.get('license_plate')
+        uuid = request.data.get('uuid')
+
+        try:
+            car = Car.objects.get(license_plate=license_plate)
+            print(1)
+            if car.status == 1:
+                if car.uuid != uuid:
+                    return Response('Thong tin uuid khong hop le doi voi nguoi dang ky', status=400)
+                else:
+                    pass
+            elif car.status == 2:
+                car.uuid = uuid
+                car.save()
+        except Car.DoesNotExist:
+            car = Car.objects.create(license_plate=license_plate, uuid=uuid, is_active=True, is_parking=True, status=2)
+            # car.save()
+        parking_slot = find_empty_parking_slot()  # Tìm vị trí đỗ xe trống
+        if parking_slot is None:
+            return Response("Đã hết chỗ", status=400)
+        parking_record_data = {
+            'car': car.id,
+            'exit_time': None,
+            'parking_slot': parking_slot.id
+        }
+        parking_record_serializer = ParkingRecordSerializer(data=parking_record_data)
+        if parking_record_serializer.is_valid():
+            parking_record = parking_record_serializer.save()
+            parking_slot.is_available = 0
+            parking_slot.save()
+            return Response({'success': True, 'parking_spot': parking_slot.slot_number})
+        else:
+            return Response(parking_record_serializer.errors, status=400)
+    else:
+        return Response("Đã hết chỗ", status=400)
+
+
+@api_view(['POST'])
+def exit_car(request):
+    license_plate = request.data.get('license_plate')
+    uuid = request.data.get('uuid')
+    try:
+        car = Car.objects.get(license_plate=license_plate)
+        if car.uuid == uuid:
+            car.is_parking = False
+            car.save()
+            parking_record = ParkingRecord.objects.filter(car=car, exit_time=None)
+            parking_record.exit_time = timezone.now()
+            parking_slot = parking_record.parking_slot
+            if car.status == 2:
+                timedelta = parking_record.exit_time - parking_record.entry_time
+                total_seconds = timedelta.total_seconds()
+                rounded_hours = Decimal(total_seconds / 3600)
+                parking_record.total_cost = rounded_hours * parking_slot.cost_per_hour
+                parking_record.is_paid = True
+                parking_record.save()
+                # Tao hoa don
+                invoice = Invoice.objects.create(
+                    parking_record=parking_record,
+                    invoice_number="INV-" + str(parking_record.id),
+                    invoice_date=timezone.now().date(),
+                    due_date=timezone.now().date() + timezone.timedelta(days=7),  # Set payment deadline to 7 days from now
+                    parking_start_time=parking_record.entry_time,
+                    parking_end_time=parking_record.exit_time,
+                    parking_duration=rounded_hours,
+                    parking_fee=parking_record.total_cost,
+                    payment_status="paid",
+                    payment_method='direct'
+                )
+                invoice.save()
+            else:
+                pass
+            parking_slot.is_available = True
+            parking_slot.save()
+            return Response('Xe số ' + car.license_plate + ' đã đi ra', status=200)
+        else:
+            return Response("UUID của xe không trùng khớp", status=400)
+
+
+    except Car.DoesNotExist:
+        return Response("Có lỗi trong khâu nhận diện", status=400)
